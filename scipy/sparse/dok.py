@@ -380,9 +380,9 @@ class dok_matrix(spmatrix, IndexMixin, dict):
 
     def _mul_multivector(self, other):
         # matrix * multivector
-        M, N = self.shape
-        n_vecs = other.shape[1]
-        result = np.zeros((M, n_vecs), dtype=upcast(self.dtype, other.dtype))
+        result_shape = (self.shape[0], other.shape[1])
+        result_dtype = upcast(self.dtype, other.dtype)
+        result = np.zeros(result_shape, dtype=result_dtype)
         for (i, j), v in iteritems(self):
             result[i,:] += v * other[j,:]
         return result
