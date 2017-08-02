@@ -3936,6 +3936,20 @@ class TestDOK(sparse_test_class(minmax=False, nnz_axis=False)):
         assert_equal(da.dtype, np.float32)
         assert_array_equal(da, data)
 
+        # Iterator ctor
+        it = iter([((0, 0), 1), ((1, 1), 1), ((2, 2), 1)])
+        d = dok_matrix(it)
+        assert_equal(d.dtype, float)
+        assert_equal(d.shape, (3, 3))
+        with assert_raises(ValueError):
+            dok_matrix(iter([((0, 0, 0), 1), ((1, 1), 1), ((2, 2), 1)]))
+        with assert_raises(ValueError):
+            dok_matrix(iter([((0, 0), 1, 1), ((1, 1), 1), ((2, 2), 1)]))
+
+        # Exeptions
+        assert_raises(TypeError, dok_matrix, (3, 3, 3))
+        assert_raises(TypeError, dok_matrix, [[1], [1, 2, 3]])
+
     def test_resize(self):
         # A couple basic tests of the resize() method.
         #

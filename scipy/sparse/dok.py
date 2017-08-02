@@ -19,11 +19,9 @@ from .sputils import (isdense, getdtype, isshape, isintlike, isscalarlike,
                       upcast, upcast_scalar, IndexMixin, get_index_dtype)
 
 try:
-    from operator import isSequenceType as _is_sequence
+    from collections import Iterator
 except ImportError:
-    def _is_sequence(x):
-        return (hasattr(x, '__len__') or hasattr(x, '__next__')
-                or hasattr(x, 'next'))
+    from collections.abc import Iterator
 
 
 class dok_matrix(spmatrix, IndexMixin, dict):
@@ -78,7 +76,7 @@ class dok_matrix(spmatrix, IndexMixin, dict):
     format = 'dok'
 
     def __init__(self, arg1, shape=None, dtype=None, copy=False):
-        # TODO: constructor from iterable?
+        # TODO: should setting shape affect the contructors?
         dict.__init__(self)
         spmatrix.__init__(self)
 
@@ -98,6 +96,22 @@ class dok_matrix(spmatrix, IndexMixin, dict):
             dict.update(self, arg1)
             self.shape = arg1.shape
             self.dtype = arg1.dtype
+        elif isinstance(arg1, Iterator):  # Iterator constructor
+            # HACK: shape hack to get the checks on m and n
+            import sys
+            self.shape = (sys.maxsize, sys.maxsize)
+
+            M, N = 0, 0
+            # Fails if not formatted well. Is better fail message necesary?
+            for (m, n), val in arg1:
+                M = max(M, m)
+                N = max(N, n)
+                self[m, n] = val
+
+            if dtype is not None:
+                self.astype(dtype)
+            self._shape = (M + 1, N + 1)
+
         else:  # Dense ctor
             try:
                 arg1 = np.asarray(arg1)
